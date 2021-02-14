@@ -1,18 +1,8 @@
-import findKey from 'lodash/findKey';
 import keyBy from 'lodash/keyBy';
-import map from 'lodash/map';
-import mapValues from 'lodash/mapValues';
-import assign from 'lodash/assign';
-import each from 'lodash/each';
-import isFunction from 'lodash/isFunction';
-import find from 'lodash/find';
-import last from 'lodash/last';
 import noop from 'lodash/noop';
 
 import {processResponse, RowExistsError, ColumnExistsError, ROW, COLUMN, PREPEND, APPEND, numberToColumnLetter} from './util';
 
-import Row from './row';
-import Column from './column';
 
 import Sheet from './sheet';
 import RowTable from './table-row';

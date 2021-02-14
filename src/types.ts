@@ -1,5 +1,3 @@
-import type { APPEND } from "./util";
-
 export enum TableMode {
     ROW = "ROW",
     COLUMN = "COLUMN"

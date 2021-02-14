@@ -1,8 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/index.ts',
   devtool: 'inline-source-map',
+  resolve: {
+    extensions: ['.ts'],
+  },
   output: {
     filename: 'browser.js',
     path: path.resolve(__dirname, 'dist'),
@@ -14,15 +17,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.m?js$/,
+        test: /\.ts$/,
         exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: ['@babel/plugin-proposal-class-properties']
-          }
-        }
+        use: 'ts-loader'
       }
     ]
   }

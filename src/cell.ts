@@ -1,7 +1,7 @@
 import type { ORM, DB } from '.';
 import { enumerable } from './decorators';
 import type Sheet from './sheet';
-import {numberToColumnLetter} from './util';
+import { numberToColumnLetter } from './util';
 
 export type CellOptions = {
   id?: string;

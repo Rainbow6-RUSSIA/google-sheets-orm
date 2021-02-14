@@ -1,6 +1,3 @@
-import assign from 'lodash/assign';
-import each from 'lodash/each';
-import isFunction from 'lodash/isFunction';
 import { enumerable } from './decorators';
 import type Table from './table';
 

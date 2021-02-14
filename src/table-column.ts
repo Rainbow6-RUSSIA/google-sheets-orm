@@ -2,7 +2,6 @@ import Table, { TableField, TableOptions } from './table';
 import Column from './column';
 import isPlainObject from 'lodash/isPlainObject';
 
-import {processResponse, numberToColumnLetter} from './util';
 import type { DB } from '.';
 
 export default class ColumnTable extends Table {

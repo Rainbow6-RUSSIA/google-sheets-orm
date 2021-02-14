@@ -1,17 +1,7 @@
-import findKey from 'lodash/findKey';
-import keyBy from 'lodash/keyBy';
-import map from 'lodash/map';
-import mapValues from 'lodash/mapValues';
-import assign from 'lodash/assign';
-import each from 'lodash/each';
-import isFunction from 'lodash/isFunction';
-import find from 'lodash/find';
-import last from 'lodash/last';
-
 import Table, { TableOptions } from './table';
 import Row from './row';
 
-import {processResponse, numberToColumnLetter, RowExistsError} from './util';
+import {numberToColumnLetter} from './util';
 import type { DB } from '.';
 
 type RowTableOptions = {

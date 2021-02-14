@@ -2,10 +2,13 @@ const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/index.ts',
   devtool: 'inline-source-map',
   target: 'node',
   externals: [nodeExternals()],
+  resolve: {
+    extensions: ['.ts']
+  },
   output: {
     filename: 'node.js',
     path: path.resolve(__dirname, 'dist'),
@@ -16,15 +19,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.m?js$/,
+        test: /\.ts$/,
         exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-            plugins: ['@babel/plugin-proposal-class-properties']
-          }
-        }
+        use: 'ts-loader'
       }
     ]
   }
