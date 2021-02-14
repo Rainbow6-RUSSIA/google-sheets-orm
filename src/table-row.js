@@ -8,13 +8,22 @@ import isFunction from 'lodash/isFunction';
 import find from 'lodash/find';
 import last from 'lodash/last';
 
-import Table from './table';
+import Table, { TableOptions } from './table';
 import Row from './row';
 
 import {processResponse, numberToColumnLetter, RowExistsError} from './util';
+import type { DB } from '.';
+
+type RowTableOptions = {
+  headerRow?: number
+} & TableOptions
 
 export default class RowTable extends Table {
-  constructor(db, name, fields, options = {}) {
+  headerRow: number;
+  private _sheetHeaders: string[];
+  firstField: any;
+  lastField: any;
+  constructor(db: DB, name: string, fields: any, options: RowTableOptions = {}) {
     super(db, name, fields, options);
 
     this.valueSetClass = Row;
@@ -29,7 +38,8 @@ export default class RowTable extends Table {
           range: `${this.name}!A${this.headerRow}:CZ${this.headerRow}`,
           majorDimension: 'COLUMNS'
         }).then((response) => {
-          const existing = (response.result.values || []).map(column => column[0]);
+          const values = response.data.values || []
+          const existing = values.map(column => column[0]);
           const missing = Object.keys(this.fields).filter(search => !existing.includes(search));
           const start = numberToColumnLetter(existing.length) + '1';
           const end = numberToColumnLetter(existing.length + missing.length) + '1';
@@ -39,10 +49,11 @@ export default class RowTable extends Table {
           return this.orm.sheets.spreadsheets.values.update({
             spreadsheetId: this.db.id,
             range: `${this.name}!${start}:${end}`,
-            valueInputOption: 'RAW'
-          }, {
-            values: missing.map(value => [value]),
-            majorDimension: "COLUMNS"
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: missing.map(value => [value]),
+              majorDimension: "COLUMNS"
+            }
           }).then(() => {
             this._sheetHeaders.forEach((key, i) => {
               if (!this.fields[key]) return;
@@ -66,11 +77,9 @@ export default class RowTable extends Table {
   }
 
   columns() {
-    return this._sheetHeaders.map((header, index) => {
-      return {
-        letter: numberToColumnLetter(index),
-        field: this.fields[header]
-      };
-    });
+    return this._sheetHeaders.map((header, index) => ({
+      letter: numberToColumnLetter(index),
+      field: this.fields[header]
+    }));
   }
 }

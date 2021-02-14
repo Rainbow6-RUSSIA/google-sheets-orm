@@ -1,33 +1,48 @@
+import type { ORM, DB } from '.';
+import { enumerable } from './decorators';
+import type Sheet from './sheet';
 import {numberToColumnLetter} from './util';
 
-export default class Cell {
-  constructor(sheet, value, options = {}) {
-    Object.defineProperty(this, 'sheet', { value: sheet, enumerable: false });
-    Object.defineProperty(this, 'db', { value: sheet.db, enumerable: false });
-    Object.defineProperty(this, 'orm', { value: sheet.orm, enumerable: false });
+export type CellOptions = {
+  id?: string;
+  row?: number;
+  column?: number;
+};
 
+export default class Cell {
+  value: string | null;
+  id: string;
+  constructor(sheet: Sheet, value: string | null, options: CellOptions = {}) {
+    this.sheet = sheet
+    this.db = sheet.db
+    this.orm = sheet.orm
     this.value = value;
     if (options.id) this.id = options.id;
     if (options.row && options.column) this.id = numberToColumnLetter(options.column) + (options.row + 1);
     if (!this.id) throw new Error('Cell id must be supplied');
   }
 
-  update(value) {
+  @enumerable(false)
+  sheet: Sheet
+  @enumerable(false)
+  db: DB
+  @enumerable(false)
+  orm: ORM
+
+  async update(value: string | null) {
     this.value = value;
 
-    return this.sheet.create().then(() => {
-      return this.orm.sheets.spreadsheets.values.update({
-        spreadsheetId: this.db.id,
-        range: `${this.sheet.name}!${this.id}`,
-        valueInputOption: 'RAW'
-      }, {
+    await this.sheet.create();
+    await this.orm.sheets.spreadsheets.values.update({
+      spreadsheetId: this.db.id,
+      range: `${this.sheet.name}!${this.id}`,
+      valueInputOption: 'RAW',
+      requestBody: {
         majorDimension: 'ROWS',
         values: [[this.value]]
-      }).then(() => {
-        console.log('Cell updated');
-
-        return this;
-      });
+      }
     });
+    console.log('Cell updated');
+    return this;
   }
 }

@@ -5,7 +5,7 @@ export function numberToColumnLetter(number) { // 0 based
   return String.fromCharCode(65 + number);
 }
 
-export function processResponse(response) {
+export function processResponse<T>(response: { data?: T } & { result?: T } & T): T {
   if (response.data) return response.data;
   if (response.result) return response.result;
   return response;

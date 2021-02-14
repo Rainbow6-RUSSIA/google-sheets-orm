@@ -1,15 +1,27 @@
+import type Table from './table';
+import type { DB, ORM } from '.';
 import assign from 'lodash/assign';
 import each from 'lodash/each';
 import isFunction from 'lodash/isFunction';
+import { enumerable } from './decorators';
 
 export default class ValueSet {
-  constructor(table, values, options = {}) {
+  constructor(table: Table, values: any, _options = {}) {
     assign(this, values || {});
 
-    Object.defineProperty(this, 'table', { value: table, enumerable: false });
-    Object.defineProperty(this, 'db', { value: table.db, enumerable: false });
-    Object.defineProperty(this, 'orm', { value: table.orm, enumerable: false });
+    this.table = table
+    this.db = table.db
+    this.orm = table.orm
   }
+
+  @enumerable(false)
+  table: Table
+  
+  @enumerable(false)
+  db: DB
+
+  @enumerable(false)
+  orm: ORM
 
   set(values) {
     assign(this, values);

@@ -1,12 +1,15 @@
-import Table from './table';
+import Table, { TableField, TableOptions } from './table';
 import Column from './column';
 import isPlainObject from 'lodash/isPlainObject';
 
 import {processResponse, numberToColumnLetter} from './util';
+import type { DB } from '.';
 
 export default class ColumnTable extends Table {
-  constructor(...args) {
-    super(...args);
+  firstField: string;
+  lastField: string;
+  constructor(db: DB, name: string, fields: Record<string, TableField>, options: TableOptions = {}) {
+    super(db, name, fields, options);
 
     this.valueSetClass = Column;
   }

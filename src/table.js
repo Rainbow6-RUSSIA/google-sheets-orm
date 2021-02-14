@@ -6,15 +6,52 @@ import isPlainObject from 'lodash/isPlainObject';
 
 import Sheet from './sheet';
 import {processResponse, numberToColumnLetter, RowExistsError, ColumnExistsError, ROW, COLUMN, APPEND, PREPEND} from './util';
+import type {DB, ORM} from '.';
+import { InsertOrder, TableMode } from './types';
+import RowTable from './table-row';
+import ColumnTable from './table-column';
 
-export default class Table extends Sheet {
-  constructor(db, name, fields, options = {}) {
+export type TableOptions = {
+  mode?: TableMode,
+  insertOrder?: InsertOrder,
+  skipRows?: number,
+  skipColumns?: number;
+}
+
+export type TableField = {
+  required?: boolean;
+  primaryKey?: boolean;
+  header?: string;
+  key?: string;
+  defaultValue?: string | (() => string);
+  first?: any;
+  last?: any;
+  type?: any;
+  column?: number;
+  row?: number;
+  location?: number;
+};
+
+export default abstract class Table extends Sheet {
+  orm: ORM;
+  mode: TableMode;
+  insertOrder: InsertOrder;
+  name: string;
+  db: DB;
+  pk: string;
+  skipRows: number;
+  skipColumns: number;
+  skip: number;
+  valueSetClass: any;
+  ddlSynced: Promise<any> | null;
+  fields: { [x: string]: TableField; };
+  constructor(db: DB, name: string, fields: Record<string, TableField>, options: TableOptions = {}) {
     super(db, name, options);
     if (!db || !name || !fields) throw new Error('new Table(db, name, fields) is required');
 
     this.orm = db.orm;
-    this.mode = options.mode || ROW;
-    this.insertOrder = options.insertOrder || APPEND;
+    this.mode = options.mode || TableMode.ROW;
+    this.insertOrder = options.insertOrder || InsertOrder.APPEND;
 
     if (this.mode === COLUMN && this.insertOrder === APPEND) throw new Error('APPEND is not supported for mode COLUMN currently');
 
@@ -36,6 +73,15 @@ export default class Table extends Sheet {
     this.ddlSynced = null;
   }
 
+  isRowTable(): this is RowTable {
+    return this instanceof RowTable
+  }
+  isColumnTable(): this is ColumnTable {
+    return this instanceof ColumnTable
+  }
+
+  abstract ddl(): Promise<any>
+
   insert(values) {
     if (Array.isArray(values)) {
       // TODO: Optimize
@@ -54,7 +100,7 @@ export default class Table extends Sheet {
           if (this.insertOrder === PREPEND) {
             return this.orm.sheets.spreadsheets.batchUpdate({
               spreadsheetId: this.db.id,
-              resource: {
+              requestBody: {
                 requests: [
                   {
                     insertDimension: {
@@ -73,10 +119,11 @@ export default class Table extends Sheet {
               return this.orm.sheets.spreadsheets.values.update({
                 spreadsheetId: this.db.id,
                 range: this.mode === ROW ? this._prepareColumnRange(2) : this._prepareRowRange(0),
-                valueInputOption: 'RAW'
-              }, {
-                majorDimension: this.mode === ROW ? 'COLUMNS' : 'COLUMNS',
-                values: this._prepareValues(valueSet)
+                valueInputOption: 'RAW',
+                requestBody: {
+                  majorDimension: this.mode === ROW ? 'COLUMNS' : 'COLUMNS',
+                  values: this._prepareValues(valueSet)
+                }
               }).then(processResponse).then((response) => {
                 if (this.mode === ROW) {
                   valueSet.row = parseInt(response.updatedRange.match(/(\d+)$/)[1], 10);
@@ -91,10 +138,11 @@ export default class Table extends Sheet {
               spreadsheetId: this.db.id,
               range: this.mode === ROW ? this._prepareColumnRange(2) : this._prepareRowRange(0),
               valueInputOption: 'RAW',
-              insertDataOption: 'INSERT_ROWS'
-            }, {
-              majorDimension: this.mode === ROW ? 'COLUMNS' : 'ROWS',
-              values: this._prepareValues(valueSet)
+              insertDataOption: 'INSERT_ROWS',
+              requestBody: {
+                majorDimension: this.mode === ROW ? 'COLUMNS' : 'ROWS',
+                values: this._prepareValues(valueSet)
+              }
             }).then(processResponse).then(response => {
               if (this.mode === ROW) {
                 valueSet.row = parseInt(response.updates.updatedRange.match(/(\d+)$/)[1], 10);
@@ -132,9 +180,8 @@ export default class Table extends Sheet {
     return this.ddl().then(() => {
       return this.orm.sheets.spreadsheets.values.get({
         spreadsheetId: this.db.id,
-        range: this.name
-      }, {
-        majorDimension: this.mode === ROW ? 'ROWS' : 'COLUMNS',
+        range: this.name,
+        majorDimension: this.isRowTable() ? 'ROWS' : 'COLUMNS',
       }).then(processResponse).then(response => {
         if (!response.values) return [];
         const skip = this.skip + (this.mode === ROW ? 1 : 0);
@@ -173,12 +220,12 @@ export default class Table extends Sheet {
   }
 
   _prepareValues(values) {
-    if (this.mode === ROW) {
+    if (this.isRowTable()) {
       return this.columns().map(column => {
         return [column.field ? values[column.field.header] : undefined];
       });
     }
-    if (this.mode === COLUMN) {
+    if (this.isColumnTable()) {
       return [this._prepareColumnValues(values, this.fields)];
     }
   }
@@ -196,7 +243,8 @@ export default class Table extends Sheet {
     return `${this.name}!${letter}${this.skipRows + 1}:${letter}1000`;
   }
 
-  _prepareColumnRange(firstRow, lastRow) {
+  _prepareColumnRange(firstRow: number, lastRow?: number) {
+    if (!this.isRowTable()) throw new Error(`_prepareColumnRange isn't implemented in ${this.mode} table`);
     const columns = this.columns();
     lastRow = lastRow || firstRow;
 
