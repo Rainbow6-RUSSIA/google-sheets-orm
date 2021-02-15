@@ -3,6 +3,7 @@ import findKey from 'lodash/findKey';
 import mapValues from 'lodash/mapValues';
 import last from 'lodash/last';
 import isPlainObject from 'lodash/isPlainObject';
+// import { find, findKey, mapValues, last, isPlainObject }  from 'lodash';
 
 import Sheet from './sheet';
 import {processResponse, numberToColumnLetter, RowExistsError, ColumnExistsError, ROW, COLUMN, APPEND, PREPEND} from './util';
