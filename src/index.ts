@@ -1,9 +1,16 @@
 import keyBy from 'lodash/keyBy';
 import noop from 'lodash/noop';
-// import { keyBy, noop } from "lodash"
+import assign from 'lodash/assign';
+import each from 'lodash/each';
+import isFunction from 'lodash/isFunction';
+import find from 'lodash/find';
+import findKey from 'lodash/findKey';
+import mapValues from 'lodash/mapValues';
+import last from 'lodash/last';
+import isPlainObject from 'lodash/isPlainObject';
+
 
 import {processResponse, RowExistsError, ColumnExistsError, ROW, COLUMN, PREPEND, APPEND, numberToColumnLetter} from './util';
-
 
 import Sheet from './sheet';
 import RowTable from './table-row';

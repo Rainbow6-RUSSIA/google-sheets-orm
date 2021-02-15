@@ -4,7 +4,7 @@ module.exports = {
   entry: './src/index.ts',
   devtool: 'inline-source-map',
   resolve: {
-    extensions: ['.ts'],
+    extensions: ['.ts', '.js'],
   },
   output: {
     filename: 'browser.js',

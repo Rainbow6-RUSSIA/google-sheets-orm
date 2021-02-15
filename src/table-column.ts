@@ -1,7 +1,6 @@
 import Table, { TableField, TableOptions } from './table';
 import Column from './column';
 import isPlainObject from 'lodash/isPlainObject';
-// import { isPlainObject } from 'lodash';
 
 import type { DB } from '.';
 
